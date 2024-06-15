@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  password String?
+  name     String
+  picture  String
+  provider String
+
+  comments Comment[]
+  likes    Like[]
+
+  created_at DateTime @default(now())
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+
+  products Product[]
+}
+
+model Producer {
+  id    String @id @default(cuid())
+  name  String @unique
+
+  products Product[]
+
+  created_at DateTime @default(now())
+}
+
+model Product {
+  id     String   @id @default(cuid())
+  name   String   @unique
+  slug   String   @unique
+  images String[]
+  stock  Int
+  price  Float
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  producerId String
+  producer   Producer @relation(fields: [producerId], references: [id])
+  reviews    Review[]
+
+  created_at DateTime @default(now())
+}
+
+model Comment {
+  id      String @id @default(cuid())
+  content String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  likes Like[]
+
+  created_at DateTime @default(now())
+}
+
+enum LikeValue {
+  Like
+  DISLIKE
+}
+
+model Like {
+  id    String    @id @default(cuid())
+  value LikeValue
+
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id])
+  commentId String  @unique
+  comment   Comment @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, commentId])
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+}
